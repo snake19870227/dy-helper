@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm">
+            <form>
+                <div class="form-group">
+                    <label for="shareUrl">用户分享地址</label>
+                    <textarea class="form-control" id="shareUrl" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="downloadType">下载范围</label>
+                    <select class="form-control" id="downloadType">
+                        <option value="1">自传</option>
+                        <option value="2">收藏</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary" id="download-btn" onclick="beginDownload()">下载</button>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col" id="log-container"></div>
+    </div>
+</div>
+
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+<script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="https://cdn.bootcss.com/sockjs-client/1.1.4/sockjs.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var socket = new SockJS("http://localhost:8888/websocket");
+        var stompClient = Stomp.over(socket);
+        stompClient.connect(
+            {},
+            function connectCallback() {
+                console.log("连接成功");
+                stompClient.subscribe('/topic/log', function (message) {
+                    console.log(message);
+                    var logMsg = JSON.parse(message.body);
+                    if (logMsg.type === "LocalVideo") {
+                        $("#log-container").prepend(logMsg.data.videoFile + "<br/>");
+                    }
+                    if (logMsg.type === "unknown") {
+                        $("#log-container").prepend(logMsg.data + "<br/>");
+                    }
+                });
+            },
+            function errorCallBack(error) {
+                console.log("连接失败");
+            }
+        );
+    });
+    function beginDownload() {
+        $.post({
+            url: "http://localhost:8888/download",
+            data: "shareUrl=" + encodeURIComponent($("#shareUrl").val()) + "&downloadType=" + $("#downloadType").val()
+        });
+    }
+</script>
+</body>
+</html>
