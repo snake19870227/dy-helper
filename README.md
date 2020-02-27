@@ -1,6 +1,6 @@
 # Java实现的某音爬虫
 首先使用 Charles、Fiddler 等抓包工具获取手机APP的http请求头、cookie信息  
-类似:![https://github.com/snake19870227/dy-helper/blob/master/doc/WX20200226-201819@2x.png?raw=true](抓包截图)  
+类似:![抓包截图](https://github.com/snake19870227/dy-helper/blob/master/doc/WX20200226-201819@2x.png?raw=true ''抓包截图'')  
 将得到的信息配置到 application-http.yml(新建) 中  
 ```
 douyin:
