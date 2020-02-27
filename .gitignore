@@ -2,4 +2,4 @@
 target
 .idea
 *.iml
-application-bhy.yml
+application-http.yml

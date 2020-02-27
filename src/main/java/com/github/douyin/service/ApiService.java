@@ -136,7 +136,7 @@ public class ApiService {
                 if (localVideo != null) {
                     FileWriter logFileWriter = logFileWriterMap.get(localVideo.getProfilePath().toString());
                     if (logFileWriter == null) {
-                        String logFileName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".log";
+                        String logFileName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".log.json";
                         logFileWriter = new FileWriter(new File(localVideo.getProfilePath(), logFileName), StandardCharsets.UTF_8);
                         logFileWriterMap.put(localVideo.getProfilePath().toString(), logFileWriter);
                     }
