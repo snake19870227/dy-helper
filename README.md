@@ -32,6 +32,4 @@ douyin:
 - 收藏，用户收藏的视频(仅测试过本人账号)
 ---
 下载的视频按照用户分子文件夹，文件夹名为 'shortId + nickname + uid'  
-用户文件夹下每次会记录日志 yyyy-MM-dd.log.json ,日志每行为对象
-`com.github.douyin.entity.DyLocalVideo`  
-序列化为json的结果
+用户文件夹下每次会记录日志 yyyy-MM-dd.log.json ,日志每行为对象`com.github.douyin.entity.DyLocalVideo`序列化为json的结果
