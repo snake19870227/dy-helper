@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" onclick="connectWebSocketServer()">连接</button>
+                <button type="button" class="btn btn-danger" onclick="disconnectWebSocketServer()">断开</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-5">
+            <form>
+                <div class="form-group">
+                    <label for="uid">UID</label>
+                    <input type="text" class="form-control" id="uid" aria-describedby="emailHelp">
+                </div>
+                <div class="form-group">
+                    <label for="secUid">sec_uid</label>
+                    <input type="text" class="form-control" id="secUid">
+                </div>
+                <button type="button" class="btn btn-primary" id="profile-btn" onclick="profile()">查询</button>
+            </form>
+        </div>
+        <div class="col-7">
+            <form>
+                <div class="form-group">
+                    <label for="shareUrl">用户分享地址</label>
+                    <textarea class="form-control" id="shareUrl" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="downloadType">下载范围</label>
+                    <select class="form-control" id="downloadType">
+                        <option value="1">自传</option>
+                        <option value="2">收藏</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="beginDownload()">下载</button>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <button type="button" class="btn btn-secondary" onclick="clearLog()">清屏</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <ul class="list-group" id="log-container">
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+<script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.js"></script>
+<script src="https://cdn.bootcss.com/stomp.js/2.3.3/stomp.js"></script>
+<script src="https://cdn.bootcss.com/sockjs-client/1.1.4/sockjs.js"></script>
+<script>
+    var stompClient = undefined;
+    var downloadLogSub = undefined;
+    var connectStatus = 0;
+
+    $(function () {
+        connectWebSocketServer();
+    });
+
+    function connectWebSocketServer() {
+        if (connectStatus === 0) {
+            var socket = new SockJS("/websocket");
+            stompClient = Stomp.over(socket);
+            stompClient.connect(
+                {},
+                function connectCallback() {
+                    console.log("连接成功");
+                    connectStatus = 1;
+                    onStompClientSuccess();
+                },
+                function errorCallBack(error) {
+                    console.log("连接失败");
+                    connectStatus = 0;
+                    onStompConnectError();
+                }
+            );
+        }
+    }
+
+    function disconnectWebSocketServer() {
+        if (stompClient && connectStatus === 1) {
+            stompClient.disconnect(function () {
+                console.log("已断开连接");
+                connectStatus = 0;
+            });
+        }
+    }
+
+    var onStompClientSuccess = function () {
+        downloadLogSub = stompClient.subscribe('/topic/log', function (message) {
+            console.log(message);
+            var logMsg = JSON.parse(message.body);
+            if (logMsg.type === "LocalVideo") {
+                var h = "";
+                if (logMsg.data.new) {
+                    h += (
+                        "<li class='list-group-item'>" +
+                        "下载完成:" + logMsg.data.videoFile +
+                        "<a class='btn btn-info' href='" + logMsg.data.video.realFileUrl + "' target='_blank'>在线查看</>" +
+                        "</li>"
+                    );
+                    $("#log-container").prepend(h);
+                } else {
+                    h += (
+                        "<li class='list-group-item'>" +
+                        "本地已存在:" + logMsg.data.videoFile +
+                        "</li>"
+                    );
+                    var a = $("#log-container > li:has(a):last");
+                    if (a.length > 0) {
+                        a.after(h);
+                    } else {
+                        $("#log-container").prepend(h);
+                    }
+                }
+            }
+            if (logMsg.type === "unknown") {
+                $("#log-container").prepend("<li class='list-group-item'>" + logMsg.data + "</li>");
+            }
+        });
+    };
+
+    var onStompConnectError = function (error) {
+        if (downloadLogSub) {
+            downloadLogSub.unsubscribe();
+        }
+    };
+
+    function beginDownload() {
+        $.post({
+            url: "/download",
+            data: "shareUrl=" + encodeURIComponent($("#shareUrl").val()) + "&downloadType=" + $("#downloadType").val()
+        });
+    }
+
+    function fillShareUrlInput(shareUrl) {
+        $("#shareUrl").val(shareUrl);
+    }
+
+    function clearLog() {
+        $("#log-container").html("");
+    }
+
+    function profile() {
+        var uid = $("#uid").val();
+        var secUid = $("#secUid").val();
+        var url = "/user/" + uid;
+        if (secUid) {
+            url = (url + "/" + secUid);
+        }
+        $.get(url, function (dyUser) {
+            $("#log-container").prepend(
+                "<li class='list-group-item'>" +
+                "<a class='btn btn-info' href='" + dyUser.shareUrl + "' target='_blank'>" + dyUser.shareUrl + "</a>" +
+                "<button type='button' class='btn btn-success' onclick='fillShareUrlInput(\"" + dyUser.shareUrl + "\")'>填充</button>" +
+                "</li>"
+            );
+        });
+    }
+</script>
+</body>
+</html>

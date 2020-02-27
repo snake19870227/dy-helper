@@ -1,10 +1,10 @@
 server:
-  port: 8888
+  port: 8889
 spring:
   application:
     name: douyin-helper
-#  profiles:
-#    include: bhy
+  profiles:
+    include: bhy
 #douyin:
 #  download:
 #    local-path: 下载文件存放根路径

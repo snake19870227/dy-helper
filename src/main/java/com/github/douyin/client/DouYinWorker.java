@@ -23,7 +23,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,7 +74,7 @@ public class DouYinWorker {
         return null;
     }
 
-    public DyUser getUserByUid(String uid) {
+    public DyUser getUser(String uid) {
         try {
             HttpRequest request = createAppApiRequest(DouYinApi.createUserProfileUrl(uid, null));
             DyUser tmpUser = createDyUserByProfileJson(request.execute().body());
@@ -80,6 +83,16 @@ public class DouYinWorker {
             }
 
             logger.error("未能获取到用户信息:{}", uid);
+        } catch (Exception e) {
+            logger.error("获取用户信息[{}]失败", uid, e);
+        }
+        return null;
+    }
+
+    public DyUser getUser(String uid, String secUid) {
+        try {
+            HttpRequest request = createAppApiRequest(DouYinApi.createUserProfileUrl(uid, secUid));
+            return createDyUserByProfileJson(request.execute().body());
         } catch (Exception e) {
             logger.error("获取用户信息[{}]失败", uid, e);
         }
@@ -120,7 +133,14 @@ public class DouYinWorker {
     }
 
     public DyVideo createDyVideoByAwemeItem(JsonNode awemeItem) {
-        boolean isDel = awemeItem.get("status").get("is_delete").booleanValue();
+        boolean isDel = false;
+        JsonNode statusNode = awemeItem.get("status");
+        if (statusNode != null) {
+            JsonNode isDeleteNode = statusNode.get("is_delete");
+            if (isDeleteNode != null) {
+                isDel = isDeleteNode.booleanValue();
+            }
+        }
         if (!isDel) {
             try {
                 String awemeId = awemeItem.get("aweme_id").textValue();
@@ -219,12 +239,8 @@ public class DouYinWorker {
 
     public HttpRequest createAppApiRequest(String url) {
         HttpRequest request = HttpUtil.createGet(url);
-        request.header("x-tt-token", douYinApiProperties.getTtToken());
-        request.header("x-tt-trace-id", douYinApiProperties.getTtTraceId());
+        douYinApiProperties.getHeaders().forEach(request::header);
         request.header("x-khronos", String.valueOf(Instant.now().plusMillis(TimeUnit.HOURS.toMillis(8)).getEpochSecond()));
-        request.header("x-gorgon", douYinApiProperties.getGorgon());
-        request.header("x-ss-dp", douYinApiProperties.getSsDp());
-        request.header("user-agent", douYinApiProperties.getUserAgent());
         request.cookie(douYinApiProperties.getCookieStr());
         return request;
     }

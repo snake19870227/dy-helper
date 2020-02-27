@@ -10,4 +10,6 @@
 
     <logger name="com.github.douyin" level="DEBUG"/>
 
+    <logger name="com.gargoylesoftware.htmlunit" level="OFF"/>
+
 </configuration>

@@ -39,11 +39,12 @@ public class DownloadController {
                            @RequestParam(name = "downloadType") String downloadType) {
         DyUser user = douYinWorker.getUserByShareUrl(shareUrl);
         if (user != null) {
+            if (StrUtil.equals("1", downloadType)) {
+//                apiService.downloadSelf(user.getUid(), new File(downloadLocalPath));
+                apiService.downloadSelfBrowser(shareUrl, new File(downloadLocalPath));
+            }
             if (StrUtil.equals("2", downloadType)) {
                 apiService.downloadCollection(user.getUid(), new File(downloadLocalPath));
-            }
-            if (StrUtil.equals("1", downloadType)) {
-                apiService.downloadSelf(user.getUid(), new File(downloadLocalPath));
             }
         }
         return "Downloaded";

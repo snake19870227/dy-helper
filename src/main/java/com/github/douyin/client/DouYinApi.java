@@ -127,7 +127,7 @@ public class DouYinApi {
                 "&idfa=0DDAC365-7A5D-4E82-826E-B20356C44351";
     }
 
-    public static String getBaseVideoListUrl(String urlStr) {
+    public static String getBaseH5VideoListUrl(String urlStr) {
         URL url = URLUtil.url(urlStr);
 
         StringBuilder defaultUrl = new StringBuilder();
