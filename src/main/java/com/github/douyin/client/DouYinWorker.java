@@ -215,6 +215,9 @@ public class DouYinWorker {
                 if (matcher.find()) {
                     String realFileUrl = matcher.group(1);
                     logger.debug("得到真实下载地址:{}", realFileUrl);
+                    if (StrUtil.startWithIgnoreCase(realFileUrl, "http://")) {
+                        realFileUrl = StrUtil.replaceIgnoreCase(realFileUrl, "http://", "https://");
+                    }
                     video.setRealFileUrl(realFileUrl);
                     HttpUtil.downloadFile(realFileUrl, videoFile);
                     logger.info("下载完成:{}({})", videoFile.toURI(), FileUtil.readableFileSize(videoFile));

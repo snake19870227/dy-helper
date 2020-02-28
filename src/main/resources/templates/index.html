@@ -110,8 +110,8 @@
                 if (logMsg.data.new) {
                     h += (
                         "<li class='list-group-item'>" +
-                        "下载完成:" + logMsg.data.videoFile +
-                        "<a class='btn btn-info' href='" + logMsg.data.video.realFileUrl + "' target='_blank'>在线查看</>" +
+                        "下载完成:" + logMsg.data.videoFile + "<br/>" +
+                        "下载地址:" + logMsg.data.video.realFileUrl +
                         "</li>"
                     );
                     $("#log-container").prepend(h);
