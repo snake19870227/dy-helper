@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container-fluid">
+<div class="row">
+    <div class="col-md">
+        <form>
+            <div class="form-group">
+                <label for="uid">UID</label>
+                <input type="text" class="form-control" id="uid" value="52597262388">
+            </div>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" id="profile-btn" onclick="view(true)">查看</button>
+                <button type="button" class="btn btn-primary" id="clear-btn" onclick="clearVideo()">清空</button>
+                <a href="/batch" class="btn btn-primary" id="batch-btn" target="_blank">批量</a>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md">
+        <div id="video-list" class="row"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md">
+        <input type="hidden" id="cursor" value="0"/>
+        <button type="button" id="next" class="btn btn-primary btn-lg btn-block" disabled onclick="view(false)">更多
+        </button>
+        <a href="#uid" id="gotoTop" class="btn btn-primary btn-lg btn-block">顶部</a>
+    </div>
+</div>
+
+<div id="searching" class="modal fade bd-example-modal-sm" data-backdrop="static" tabindex="-1" role="dialog"
+     aria-labelledby="mySmallModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <p>查询中...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="downloading" class="modal fade bd-example-modal-sm" data-backdrop="static" tabindex="-1" role="dialog"
+     aria-labelledby="mySmallModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <p>下载中...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+<script src="https://cdn.bootcss.com/jquery-scrollTo/2.1.2/jquery.scrollTo.js"></script>
+<script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.js"></script>
+<script>
+    var awemeMap = {};
+    var searching = $("#searching");
+    var downloading = $("#downloading");
+
+    function view(clear) {
+        if (clear) {
+            clearVideo();
+        }
+        searching.modal('show');
+        searching.on('shown.bs.modal', function (e) {
+            try {
+                var url = "/view/user/" + $("#uid").val();
+                var cursor = $("#cursor").val();
+                if (cursor) {
+                    url += ("?cursor=" + cursor);
+                }
+                $.get(url, function (result) {
+                    var videosInfo = JSON.parse(result.videosInfo);
+                    $("#cursor").val(videosInfo.max_cursor);
+                    var existsMap = result.exists;
+                    $.each(videosInfo.aweme_list, function (index, aweme) {
+                        awemeMap[aweme.video.vid] = {
+                            url: aweme.video.download_addr.url_list[0],
+                            videoId: aweme.video.vid,
+                            uid: aweme.author.uid,
+                            shortId: aweme.author.short_id,
+                            secUid: aweme.author.sec_uid,
+                            uniqueId: aweme.author.unique_id,
+                            nickname: aweme.author.nickname
+                        };
+                        var html = "" +
+                            "<div class='col-md-3'>" +
+                            "  <div id='" + aweme.video.vid + "' class='card bg-light border-dark'>" +
+                            "    <img src='" + aweme.video.dynamic_cover.url_list[0] + "' class='card-img-top'>" +
+                            "    <div class='card-body'>" +
+                            "      <h5 class='card-title'>" + aweme.desc + "</h5>";
+                        if (existsMap[aweme.video.vid]) {
+                            html = html +
+                                "<p class='card-text'>" + existsMap[aweme.video.vid] + "</p>";
+                        } else {
+                            html = html +
+                                "<button type='button' class='btn btn-primary'" +
+                                " onclick='download(\"" + aweme.video.vid + "\")'>下载</button>";
+                        }
+                        html = html +
+                            "    </div>" +
+                            "  </div>" +
+                            "</div>";
+                        $("#video-list").append(html);
+                    });
+                    if (videosInfo.has_more === true) {
+                        $("#next").removeAttr("disabled");
+                    } else {
+                        $("#next").attr("disabled", "disabled");
+                    }
+                    searching.modal('hide');
+                }, "json");
+            } catch (e) {
+                searching.modal('hide');
+            }
+            searching.off();
+        });
+    }
+
+    function download(videoId) {
+        downloading.modal('show');
+        downloading.on('shown.bs.modal', function (e) {
+            try {
+                var aweme = awemeMap[videoId];
+                $.get(
+                    "/download/video",
+                    aweme,
+                    function (localVideo) {
+                        console.log(JSON.stringify(localVideo));
+                        var videoCard = $("#" + localVideo.video.videoId);
+                        videoCard.find("button").remove();
+                        videoCard.find(".card-title").after("<p class='card-text'>" + localVideo.videoFile + "</p>");
+                        downloading.modal('hide');
+                    },
+                    "json"
+                );
+            } catch (e) {
+                downloading.modal('hide');
+            }
+            downloading.off();
+        });
+    }
+
+    function clearVideo() {
+        $('#video-list').html('');
+        $('#cursor').val(0);
+        $("#next").attr("disabled", "disabled");
+    }
+</script>
+</body>
+</html>

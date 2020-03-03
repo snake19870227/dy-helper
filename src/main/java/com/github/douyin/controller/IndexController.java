@@ -11,6 +11,16 @@ public class IndexController {
 
     @GetMapping(path = "/")
     public String index() {
+        return "view";
+    }
+
+    @GetMapping(path = "/view")
+    public String view() {
+        return "view";
+    }
+
+    @GetMapping(path = "/batch")
+    public String batch() {
         return "index";
     }
 }

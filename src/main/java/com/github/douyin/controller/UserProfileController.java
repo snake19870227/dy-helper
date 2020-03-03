@@ -22,14 +22,14 @@ public class UserProfileController {
         this.douYinWorker = douYinWorker;
     }
 
-    @GetMapping(path = "/user/{uid}/{secUid}")
-    public DyUser profile(@PathVariable(name = "uid") String uid,
-                          @PathVariable(name = "secUid") String secUid) {
-        return douYinWorker.getUser(uid, secUid);
-    }
+//    @GetMapping(path = "/user/{uid}/{secUid}")
+//    public DyUser profile(@PathVariable(name = "uid") String uid,
+//                          @PathVariable(name = "secUid") String secUid) {
+//        return douYinWorker.getUser(uid, secUid);
+//    }
 
-    @GetMapping(path = "/user/{uid}")
-    public DyUser profile(@PathVariable(name = "uid") String uid) {
-        return douYinWorker.getUser(uid);
-    }
+//    @GetMapping(path = "/user/{uid}")
+//    public DyUser profile(@PathVariable(name = "uid") String uid) {
+//        return douYinWorker.getUser(uid);
+//    }
 }

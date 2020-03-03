@@ -48,73 +48,85 @@ public class DouYinWorker {
 
     public static final Pattern pattern = Pattern.compile("href=\"(.*?)\">");
 
-    public DyUser getUserByShareUrl(String shareUrlStr) {
+//    public DyUser getUserByShareUrl(String shareUrlStr) {
+//        try {
+//            URL shareUrl = new URL(shareUrlStr);
+//
+//            String path = shareUrl.getPath();
+//            String uid = StrUtil.sub(path, StrUtil.lastIndexOfIgnoreCase(path, "/") + 1, path.length());
+//
+//            String queryStr = shareUrl.getQuery();
+//            String secUid = null;
+//            for (String paramStr : StrUtil.split(queryStr, "&")) {
+//                if (StrUtil.startWithIgnoreCase(paramStr, "sec_uid")) {
+//                    secUid = StrUtil.split(paramStr, "=")[1];
+//                }
+//            }
+//            if (StrUtil.isNotBlank(uid) && StrUtil.isNotBlank(secUid)) {
+//                HttpRequest request = createAppApiRequest(DouYinApi.createUserProfileUrl(uid, secUid));
+//                return createDyUserByProfileJson(request.execute().body());
+//            }
+//
+//            logger.error("未能获取到用户信息:{}", shareUrlStr);
+//        } catch (Exception e) {
+//            logger.error("根据分享链接获取用户信息失败:{}", shareUrlStr, e);
+//        }
+//        return null;
+//    }
+
+    public String getUserIdByShareUrl(String shareUrlStr) {
         try {
             URL shareUrl = new URL(shareUrlStr);
 
             String path = shareUrl.getPath();
-            String uid = StrUtil.sub(path, StrUtil.lastIndexOfIgnoreCase(path, "/") + 1, path.length());
-
-            String queryStr = shareUrl.getQuery();
-            String secUid = null;
-            for (String paramStr : StrUtil.split(queryStr, "&")) {
-                if (StrUtil.startWithIgnoreCase(paramStr, "sec_uid")) {
-                    secUid = StrUtil.split(paramStr, "=")[1];
-                }
-            }
-            if (StrUtil.isNotBlank(uid) && StrUtil.isNotBlank(secUid)) {
-                HttpRequest request = createAppApiRequest(DouYinApi.createUserProfileUrl(uid, secUid));
-                return createDyUserByProfileJson(request.execute().body());
-            }
-
-            logger.error("未能获取到用户信息:{}", shareUrlStr);
+            return StrUtil.sub(path, StrUtil.lastIndexOfIgnoreCase(path, "/") + 1, path.length());
         } catch (Exception e) {
             logger.error("根据分享链接获取用户信息失败:{}", shareUrlStr, e);
         }
         return null;
     }
 
-    public DyUser getUser(String uid) {
-        try {
-            HttpRequest request = createAppApiRequest(DouYinApi.createUserProfileUrl(uid, null));
-            DyUser tmpUser = createDyUserByProfileJson(request.execute().body());
-            if (tmpUser != null) {
-                return getUserByShareUrl(tmpUser.getShareUrl());
-            }
+//    public DyUser getUser(String uid) {
+//        try {
+//            HttpRequest request = createAppApiRequest(DouYinApi.createUserProfileUrl(uid, null));
+//            DyUser tmpUser = createDyUserByProfileJson(request.execute().body());
+//            if (tmpUser != null) {
+//                return getUserByShareUrl(tmpUser.getShareUrl());
+//            }
+//
+//            logger.error("未能获取到用户信息:{}", uid);
+//        } catch (Exception e) {
+//            logger.error("获取用户信息[{}]失败", uid, e);
+//        }
+//        return null;
+//    }
 
-            logger.error("未能获取到用户信息:{}", uid);
-        } catch (Exception e) {
-            logger.error("获取用户信息[{}]失败", uid, e);
-        }
-        return null;
-    }
+//    public DyUser getUser(String uid, String secUid) {
+//        try {
+//            HttpRequest request = createAppApiRequest(DouYinApi.createUserProfileUrl(uid, secUid));
+//            return createDyUserByProfileJson(request.execute().body());
+//        } catch (Exception e) {
+//            logger.error("获取用户信息[{}]失败", uid, e);
+//        }
+//        return null;
+//    }
 
-    public DyUser getUser(String uid, String secUid) {
-        try {
-            HttpRequest request = createAppApiRequest(DouYinApi.createUserProfileUrl(uid, secUid));
-            return createDyUserByProfileJson(request.execute().body());
-        } catch (Exception e) {
-            logger.error("获取用户信息[{}]失败", uid, e);
-        }
-        return null;
-    }
-
-    public DyUser createDyUserByProfileJson(String json) throws Exception {
-        JsonNode userProfileNode = OBJECT_MAPPER.readTree(json);
-        JsonNode userNode = userProfileNode.get("user");
-        if (userNode != null) {
-            DyUser user = createDyUserByInfoNode(userNode);
-
-            String shareUrlStr = "https://" + userNode.get("share_info").get("share_url").textValue();
-
-            user.setShareUrl(shareUrlStr);
-
-            return user;
-        } else {
-            logger.error("未能从用户信息接口返回中获取用户信息:{}", json);
-        }
-        return null;
-    }
+//    public DyUser createDyUserByProfileJson(String json) throws Exception {
+//        JsonNode userProfileNode = OBJECT_MAPPER.readTree(json);
+//        JsonNode userNode = userProfileNode.get("user");
+//        if (userNode != null) {
+//            DyUser user = createDyUserByInfoNode(userNode);
+//
+//            String shareUrlStr = "https://" + userNode.get("share_info").get("share_url").textValue();
+//
+//            user.setShareUrl(shareUrlStr);
+//
+//            return user;
+//        } else {
+//            logger.error("未能从用户信息接口返回中获取用户信息:{}", json);
+//        }
+//        return null;
+//    }
 
     public DyUser createDyUserByVideoAuthorNode(JsonNode authorNode) throws Exception {
         return createDyUserByInfoNode(authorNode);
@@ -209,18 +221,19 @@ public class DouYinWorker {
             try {
                 downloadUrl = StrUtil.replace(downloadUrl, "&watermark=1", "");
                 logger.debug("尝试从[{}]下载", downloadUrl);
-                HttpRequest request = createAppApiRequest(downloadUrl);
+                HttpRequest request = HttpUtil.createGet(downloadUrl);
+                request.header("User-Agent", "Aweme");
                 String resultStr = request.execute().body();
                 Matcher matcher = pattern.matcher(resultStr);
                 if (matcher.find()) {
                     String realFileUrl = matcher.group(1);
                     logger.debug("得到真实下载地址:{}", realFileUrl);
+                    HttpUtil.downloadFile(realFileUrl, videoFile);
+                    logger.info("下载完成:{}({})", videoFile.toURI(), FileUtil.readableFileSize(videoFile));
                     if (StrUtil.startWithIgnoreCase(realFileUrl, "http://")) {
                         realFileUrl = StrUtil.replaceIgnoreCase(realFileUrl, "http://", "https://");
                     }
                     video.setRealFileUrl(realFileUrl);
-                    HttpUtil.downloadFile(realFileUrl, videoFile);
-                    logger.info("下载完成:{}({})", videoFile.toURI(), FileUtil.readableFileSize(videoFile));
                     localVideo.setNew(true);
                     return localVideo;
                 }

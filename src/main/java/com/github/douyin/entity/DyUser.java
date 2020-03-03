@@ -13,15 +13,17 @@ public class DyUser {
 
     private String nickname;
 
+    private String uniqueId;
+
     private String shareUrl;
 
     public DyUser() {
     }
 
-    public DyUser(String secUid, String uid, String shareUrl) {
-        this.secUid = secUid;
+    public DyUser(String uid, String shortId, String nickname) {
         this.uid = uid;
-        this.shareUrl = shareUrl;
+        this.shortId = shortId;
+        this.nickname = nickname;
     }
 
     public DyUser(String secUid, String uid, String shortId, String nickname) {
@@ -31,11 +33,20 @@ public class DyUser {
         this.nickname = nickname;
     }
 
-    public DyUser(String secUid, String uid, String shortId, String nickname, String shareUrl) {
+    public DyUser(String secUid, String uid, String shortId, String nickname, String uniqueId) {
         this.secUid = secUid;
         this.uid = uid;
         this.shortId = shortId;
         this.nickname = nickname;
+        this.uniqueId = uniqueId;
+    }
+
+    public DyUser(String secUid, String uid, String shortId, String nickname, String uniqueId, String shareUrl) {
+        this.secUid = secUid;
+        this.uid = uid;
+        this.shortId = shortId;
+        this.nickname = nickname;
+        this.uniqueId = uniqueId;
         this.shareUrl = shareUrl;
     }
 
@@ -46,6 +57,7 @@ public class DyUser {
                 ", uid='" + uid + '\'' +
                 ", shortId='" + shortId + '\'' +
                 ", nickname='" + nickname + '\'' +
+                ", uniqueId='" + uniqueId + '\'' +
                 ", shareUrl='" + shareUrl + '\'' +
                 '}';
     }
@@ -80,6 +92,14 @@ public class DyUser {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public String getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(String uniqueId) {
+        this.uniqueId = uniqueId;
     }
 
     public String getShareUrl() {

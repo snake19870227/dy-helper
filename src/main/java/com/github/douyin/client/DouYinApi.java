@@ -10,6 +10,10 @@ import java.net.URL;
  */
 public class DouYinApi {
 
+    public static String createShareUrlByUid(String uid) {
+        return "https://www.iesdouyin.com/share/user/" + uid;
+    }
+
     public static String createApiUserVideoListUrl(String uid, long cursor) {
         String url = "https://api3-normal-c-lf.amemv.com/aweme/v1/aweme/post/?version_code=9.8.1" +
                 "&js_sdk_version=1.47.2.2" +

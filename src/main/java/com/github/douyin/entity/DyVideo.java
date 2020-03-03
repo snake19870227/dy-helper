@@ -22,9 +22,18 @@ public class DyVideo {
     public DyVideo() {
     }
 
+    public DyVideo(String videoId) {
+        this.videoId = videoId;
+    }
+
     public DyVideo(String awemeId, String videoId) {
         this.awemeId = awemeId;
         this.videoId = videoId;
+    }
+
+    public DyVideo(String videoId, List<String> downloadUrls) {
+        this.videoId = videoId;
+        this.downloadUrls = downloadUrls;
     }
 
     @Override
