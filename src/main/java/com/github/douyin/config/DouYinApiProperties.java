@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * @author Bu HuaYang
  */
-@ConfigurationProperties(prefix = "douyin.download.api")
+//@ConfigurationProperties(prefix = "douyin.download.api")
 public class DouYinApiProperties {
 
     private Map<String, String> headers;

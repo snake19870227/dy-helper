@@ -22,10 +22,6 @@
                     <label for="uid">UID</label>
                     <input type="text" class="form-control" id="uid" aria-describedby="emailHelp">
                 </div>
-                <!--<div class="form-group">
-                    <label for="secUid">sec_uid</label>
-                    <input type="text" class="form-control" id="secUid">
-                </div>-->
                 <button type="button" class="btn btn-primary" id="profile-btn" onclick="downloadUid()">下载</button>
             </form>
         </div>
@@ -148,10 +144,6 @@
         });
     }
 
-    // function fillShareUrlInput(shareUrl) {
-    //     $("#shareUrl").val(shareUrl);
-    // }
-
     function clearLog() {
         $("#log-container").html("");
     }
@@ -159,23 +151,6 @@
     function downloadUid() {
         $.get("/download/user/" + $("#uid").val());
     }
-
-    // function profile() {
-    //     var uid = $("#uid").val();
-    //     var secUid = $("#secUid").val();
-    //     var url = "/user/" + uid;
-    //     if (secUid) {
-    //         url = (url + "/" + secUid);
-    //     }
-    //     $.get(url, function (dyUser) {
-    //         $("#log-container").prepend(
-    //             "<li class='list-group-item'>" +
-    //             "<a class='btn btn-info' href='" + dyUser.shareUrl + "' target='_blank'>" + dyUser.shareUrl + "</a>" +
-    //             "<button type='button' class='btn btn-success' onclick='fillShareUrlInput(\"" + dyUser.shareUrl + "\")'>填充</button>" +
-    //             "</li>"
-    //         );
-    //     });
-    // }
 </script>
 </body>
 </html>

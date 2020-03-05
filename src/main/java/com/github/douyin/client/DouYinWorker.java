@@ -8,8 +8,6 @@ import cn.hutool.http.HttpUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.github.douyin.common.BaseStreamProgress;
-import com.github.douyin.config.DouYinApiProperties;
 import com.github.douyin.entity.DyLocalVideo;
 import com.github.douyin.entity.DyUser;
 import com.github.douyin.entity.DyVideo;
@@ -19,14 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.net.URL;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,11 +29,11 @@ public class DouYinWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(DouYinWorker.class);
 
-    private final DouYinApiProperties douYinApiProperties;
+//    private final DouYinApiProperties douYinApiProperties;
 
-    public DouYinWorker(DouYinApiProperties douYinApiProperties) {
-        this.douYinApiProperties = douYinApiProperties;
-    }
+//    public DouYinWorker(DouYinApiProperties douYinApiProperties) {
+//        this.douYinApiProperties = douYinApiProperties;
+//    }
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -144,7 +135,7 @@ public class DouYinWorker {
         return new DyUser(secUid, uid, shortId, userNickName);
     }
 
-    public DyVideo createDyVideoByAwemeItem(JsonNode awemeItem) {
+    public Map<String, Object> createDyVideoByAwemeItem(JsonNode awemeItem) {
         boolean isDel = false;
         JsonNode statusNode = awemeItem.get("status");
         if (statusNode != null) {
@@ -167,7 +158,7 @@ public class DouYinWorker {
 
                     DyVideo video = new DyVideo(awemeId, videoId);
 
-                    video.setUser(user);
+//                    video.setUser(user);
 
                     ArrayNode downloadUrlNode = (ArrayNode) downloadNode.get("url_list");
                     if (downloadUrlNode != null) {
@@ -181,7 +172,11 @@ public class DouYinWorker {
                         video.setShareUrl(shareUrlNode.textValue());
                     }
 
-                    return video;
+                    Map<String, Object> returnMap = new HashMap<>(2);
+                    returnMap.put(DyUser.class.getSimpleName(), user);
+                    returnMap.put(DyVideo.class.getSimpleName(), video);
+
+                    return returnMap;
                 }
 
                 logger.info("视频信息不完整:{}", awemeItem.toString());
@@ -194,10 +189,10 @@ public class DouYinWorker {
         return null;
     }
 
-    public DyLocalVideo download(DyVideo video, File rootPath) {
+    public DyLocalVideo download(DyUser user, DyVideo video, File rootPath) {
         DyLocalVideo localVideo = new DyLocalVideo();
 
-        DyUser user = video.getUser();
+//        DyUser user = video.getUser();
         File profilePath = createProfilePath(user, rootPath);
         File videoFile = new File(profilePath, video.getVideoId() + ".mp4");
 
@@ -253,13 +248,13 @@ public class DouYinWorker {
         return profilePath;
     }
 
-    public HttpRequest createAppApiRequest(String url) {
-        HttpRequest request = HttpUtil.createGet(url);
-        douYinApiProperties.getHeaders().forEach(request::header);
-        request.header("x-khronos", String.valueOf(Instant.now().plusMillis(TimeUnit.HOURS.toMillis(8)).getEpochSecond()));
-        request.cookie(douYinApiProperties.getCookieStr());
-        return request;
-    }
+//    public HttpRequest createAppApiRequest(String url) {
+//        HttpRequest request = HttpUtil.createGet(url);
+//        douYinApiProperties.getHeaders().forEach(request::header);
+//        request.header("x-khronos", String.valueOf(Instant.now().plusMillis(TimeUnit.HOURS.toMillis(8)).getEpochSecond()));
+//        request.cookie(douYinApiProperties.getCookieStr());
+//        return request;
+//    }
 
 //    public static HttpRequest createAppApiRequest(String url) {
 //        HttpRequest request = HttpUtil.createGet(url);

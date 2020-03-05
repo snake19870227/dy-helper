@@ -17,7 +17,7 @@ public class DyVideo {
 
     private String realFileUrl;
 
-    private DyUser user;
+//    private DyUser user;
 
     public DyVideo() {
     }
@@ -85,13 +85,5 @@ public class DyVideo {
 
     public void setRealFileUrl(String realFileUrl) {
         this.realFileUrl = realFileUrl;
-    }
-
-    public DyUser getUser() {
-        return user;
-    }
-
-    public void setUser(DyUser user) {
-        this.user = user;
     }
 }

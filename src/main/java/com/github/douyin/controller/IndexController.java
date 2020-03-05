@@ -23,4 +23,9 @@ public class IndexController {
     public String batch() {
         return "index";
     }
+
+    @GetMapping(path = "/local")
+    public String local() {
+        return "local";
+    }
 }

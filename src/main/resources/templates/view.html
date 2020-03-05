@@ -6,34 +6,91 @@
     <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container-fluid">
+
 <div class="row">
-    <div class="col-md">
-        <form>
-            <div class="form-group">
-                <label for="uid">UID</label>
-                <input type="text" class="form-control" id="uid" value="52597262388">
+    <div class="col-md-3">
+        <div class="row">
+            <div class="col-md-12">
+                <form>
+                    <div class="form-group">
+                        <label for="searchText">搜索User</label>
+                        <input type="text" class="form-control" id="searchText" value="">
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary btn-sm" id="search-btn" onclick="searchUsers('currentPage', true)">搜索</button>
+                    </div>
+                </form>
             </div>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-primary" id="profile-btn" onclick="view(true)">查看</button>
-                <button type="button" class="btn btn-primary" id="clear-btn" onclick="clearVideo()">清空</button>
-                <a href="/batch" class="btn btn-primary" id="batch-btn" target="_blank">批量</a>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md overflow-auto" style="max-height: 750px;">
+                        <table class="table" style="width: 100%;">
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md">
+                        <input type="hidden" id="nextPage" value="0"/>
+                        <input type="hidden" id="prePage" value="0"/>
+                        <input type="hidden" id="currentPage" value="0"/>
+                        <nav aria-label="Page navigation example">
+                            <ul class="pagination pagination-sm justify-content-center">
+                                <li id="pre" class="page-item disabled">
+                                    <a class="page-link" href="javascript:void(0)" onclick="searchUsers('prePage', false)">上一页</a>
+                                </li>
+                                <li id="next" class="page-item disabled">
+                                    <a class="page-link" href="javascript:void(0)" onclick="searchUsers('nextPage', false)">下一页</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="row">
+            <div class="col-md-12">
+                <form>
+                    <div class="form-group">
+                        <label for="uid">UID</label>
+                        <input type="text" class="form-control" id="uid" value="52597262388">
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary btn-sm" id="profile-btn" onclick="view(true)">查看</button>
+                        <button type="button" class="btn btn-danger btn-sm" id="clear-btn" onclick="clearVideo()">清空</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md overflow-auto" style="max-height: 750px;">
+                        <div id="video-list" class="row"></div>
+                        <div class="row">
+                            <div class="col-md">
+                                <input type="hidden" id="cursor" value="0"/>
+                                <button type="button" id="nextPageVideo" class="btn btn-info btn-sm btn-block" style="display: none;"
+                                        onclick="view(false)">更多
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-<div class="row">
+<!--<div class="row">
     <div class="col-md">
-        <div id="video-list" class="row"></div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md">
-        <input type="hidden" id="cursor" value="0"/>
-        <button type="button" id="next" class="btn btn-primary btn-lg btn-block" disabled onclick="view(false)">更多
-        </button>
         <a href="#uid" id="gotoTop" class="btn btn-primary btn-lg btn-block">顶部</a>
     </div>
-</div>
+</div>-->
 
 <div id="searching" class="modal fade bd-example-modal-sm" data-backdrop="static" tabindex="-1" role="dialog"
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
@@ -57,6 +114,11 @@
     </div>
 </div>
 
+<div aria-live="polite" aria-atomic="true" style="position: absolute; z-index: 999; top: 0; right: 0;">
+    <div id="toasts" style="position: relative;">
+    </div>
+</div>
+
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
 <script src="https://cdn.bootcss.com/jquery-scrollTo/2.1.2/jquery.scrollTo.js"></script>
 <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.js"></script>
@@ -64,6 +126,7 @@
     var awemeMap = {};
     var searching = $("#searching");
     var downloading = $("#downloading");
+    var toasts = $("#toasts");
 
     function view(clear) {
         if (clear) {
@@ -72,10 +135,10 @@
         searching.modal('show');
         searching.on('shown.bs.modal', function (e) {
             try {
-                var url = "/view/user/" + $("#uid").val();
+                var url = "/view/user?searchText=" + encodeURIComponent($("#uid").val());
                 var cursor = $("#cursor").val();
                 if (cursor) {
-                    url += ("?cursor=" + cursor);
+                    url += ("&cursor=" + cursor);
                 }
                 $.get(url, function (result) {
                     var videosInfo = JSON.parse(result.videosInfo);
@@ -85,11 +148,7 @@
                         awemeMap[aweme.video.vid] = {
                             url: aweme.video.download_addr.url_list[0],
                             videoId: aweme.video.vid,
-                            uid: aweme.author.uid,
-                            shortId: aweme.author.short_id,
-                            secUid: aweme.author.sec_uid,
-                            uniqueId: aweme.author.unique_id,
-                            nickname: aweme.author.nickname
+                            uid: aweme.author.uid
                         };
                         var html = "" +
                             "<div class='col-md-3'>" +
@@ -102,7 +161,7 @@
                                 "<p class='card-text'>" + existsMap[aweme.video.vid] + "</p>";
                         } else {
                             html = html +
-                                "<button type='button' class='btn btn-primary'" +
+                                "<button id='" + aweme.video.vid + "' type='button' class='btn btn-primary btn-sm'" +
                                 " onclick='download(\"" + aweme.video.vid + "\")'>下载</button>";
                         }
                         html = html +
@@ -112,13 +171,16 @@
                         $("#video-list").append(html);
                     });
                     if (videosInfo.has_more === true) {
-                        $("#next").removeAttr("disabled");
+                        // $("#nextPageVideo").removeAttr("disabled");
+                        $("#nextPageVideo").show();
                     } else {
-                        $("#next").attr("disabled", "disabled");
+                        // $("#nextPageVideo").attr("disabled", "disabled");
+                        $("#nextPageVideo").hide();
                     }
                     searching.modal('hide');
                 }, "json");
             } catch (e) {
+                console.error(e);
                 searching.modal('hide');
             }
             searching.off();
@@ -126,33 +188,119 @@
     }
 
     function download(videoId) {
-        downloading.modal('show');
-        downloading.on('shown.bs.modal', function (e) {
+        var btn = $("#" + videoId);
+        btn.attr("disabled", "disabled");
+        try {
+            var aweme = awemeMap[videoId];
+            $.get(
+                "/download/video",
+                aweme,
+                function (localVideo) {
+                    console.log(JSON.stringify(localVideo));
+                    var videoCard = $("#" + localVideo.video.videoId);
+                    videoCard.find("button").remove();
+                    videoCard.find(".card-title").after("<p class='card-text'>" + localVideo.videoFile + "</p>");
+                    alertToast("下载完成", localVideo.videoFile);
+                },
+                "json"
+            );
+        } catch (e) {
+            console.error(e);
+        } finally {
+            btn.removeAttr("disabled");
+        }
+    }
+
+    function searchUsers(pageNumId, clear) {
+        if (clear) {
+            clearUsers();
+        }
+        searching.modal('show');
+        searching.on('shown.bs.modal', function (e) {
+            $("tbody").html("");
             try {
-                var aweme = awemeMap[videoId];
                 $.get(
-                    "/download/video",
-                    aweme,
-                    function (localVideo) {
-                        console.log(JSON.stringify(localVideo));
-                        var videoCard = $("#" + localVideo.video.videoId);
-                        videoCard.find("button").remove();
-                        videoCard.find(".card-title").after("<p class='card-text'>" + localVideo.videoFile + "</p>");
-                        downloading.modal('hide');
+                    "/users?searchStr=" + encodeURIComponent($("#searchText").val()) + "&page=" + $("#" + pageNumId).val(),
+                    function (result) {
+                        $("#currentPage").val(result.currentPage);
+                        if (result.hasPre) {
+                            $("#prePage").val(result.prePage);
+                            $("#pre").removeClass("disabled");
+                        } else {
+                            $("#pre").addClass("disabled");
+                        }
+                        if (result.hasNext) {
+                            $("#nextPage").val(result.nextPage);
+                            $("#next").removeClass("disabled");
+                        } else {
+                            $("#next").addClass("disabled");
+                        }
+                        if (result.userList) {
+                            $.each(result.userList, function (index, user) {
+                                var html = "" +
+                                    "<tr>" +
+                                    "    <td><img src='" + user.headImageUrl + "' style='width:100px;height:100px;'></td>" +
+                                    "    <td>" + user.nickname + "</td>" +
+                                    "    <td>" +
+                                    "        <button type='button' class='btn btn-primary btn-sm' onclick='viewUser(\"" + user.uid + "\")'>视频</button>" +
+                                    "        <a href='https://www.iesdouyin.com/share/user/" + user.uid + "' class='btn btn-primary btn-sm' target='_blank'>查看</a>" +
+                                    "    </td>" +
+                                    "</tr>";
+                                $("tbody").append(html);
+                            });
+                        }
+                        searching.modal('hide');
                     },
                     "json"
                 );
             } catch (e) {
-                downloading.modal('hide');
+                console.error(e);
+                searching.modal('hide');
             }
-            downloading.off();
+            searching.off();
         });
+    }
+
+    function viewUser(uid) {
+        $("#uid").val(uid);
+        view(true);
+    }
+
+    function alertToast(headerText, bodyHtml) {
+        var html = "" +
+            "<div class='toast' role='alert' aria-live='assertive' aria-atomic='true' data-delay='3000'>" +
+            "    <div class='toast-header'>" +
+            "        <strong class='mr-auto'>" + headerText + "</strong>" +
+            "        <button type='button' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'>" +
+            "            <span aria-hidden='true'>&times;</span>" +
+            "        </button>" +
+            "    </div>" +
+            "    <div class='toast-body'>" + bodyHtml + "</div>" +
+            "</div>" +
+            "";
+        var h = $(html);
+        toasts.append(h);
+        h.on('hidden.bs.toast', function () {
+            h.detach();
+        });
+        h.toast('show');
     }
 
     function clearVideo() {
         $('#video-list').html('');
         $('#cursor').val(0);
-        $("#next").attr("disabled", "disabled");
+        // $("#nextPageVideo").attr("disabled", "disabled");
+        $("#nextPageVideo").hide();
+        awemeMap = {};
+    }
+
+    function clearUsers() {
+        $("#currentPage").val(0);
+        $("#nextPage").val(0);
+        $("#prePage").val(0);
+        $("#pre").addClass("disabled");
+        $("#next").addClass("disabled");
+        $("tbody").html("");
     }
 </script>
 </body>

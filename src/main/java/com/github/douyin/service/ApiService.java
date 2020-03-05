@@ -143,9 +143,11 @@ public class ApiService {
 
     private void disposeAwemeList(JsonNode awemeListNode, File rootPath, Map<String, FileWriter> logFileWriterMap) throws JsonProcessingException {
         for (JsonNode awemeNode : awemeListNode) {
-            DyVideo video = douYinWorker.createDyVideoByAwemeItem(awemeNode);
-            if (video != null) {
-                DyLocalVideo localVideo = douYinWorker.download(video, rootPath);
+            Map<String, Object> returnMap = douYinWorker.createDyVideoByAwemeItem(awemeNode);
+            DyVideo video = (DyVideo) returnMap.get(DyVideo.class.getSimpleName());
+            DyUser user = (DyUser) returnMap.get(DyUser.class.getSimpleName());
+            if (video != null && user != null) {
+                DyLocalVideo localVideo = douYinWorker.download(user, video, rootPath);
                 if (localVideo != null) {
                     FileWriter logFileWriter = logFileWriterMap.get(localVideo.getProfilePath().toString());
                     if (logFileWriter == null) {

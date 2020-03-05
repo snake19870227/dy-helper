@@ -16,7 +16,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  */
 @Configuration
 @EnableWebSocketMessageBroker
-@EnableConfigurationProperties(DouYinApiProperties.class)
+//@EnableConfigurationProperties(DouYinApiProperties.class)
 public class ProjectConfig {
 
     @Configuration

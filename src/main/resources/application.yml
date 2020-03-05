@@ -5,3 +5,5 @@ spring:
     name: douyin-helper
   profiles:
     include: http
+  thymeleaf:
+    cache: false
