@@ -42,6 +42,9 @@ public class DownloadController {
     @Value("${douyin.download.local-path}")
     private String downloadLocalPath;
 
+    @Value("${douyin.download.local-http-path}")
+    private String downloadLocalHttpPath;
+
     private final DyUserRepository dyUserRepository;
 
     private final ApiService apiService;
@@ -88,10 +91,12 @@ public class DownloadController {
                 DyUser user = dyUser.get();
                 if (user.getProfilePath().exists()) {
                     DyVideo video = new DyVideo(videoId, Stream.of(url).collect(Collectors.toList()));
+                    video.setUid(user.getUid());
                     File videoFile = new File(user.getProfilePath(), video.getVideoId() + ".mp4");
                     DyLocalVideo localVideo = new DyLocalVideo();
                     localVideo.setVideo(video);
                     localVideo.setVideoFile(videoFile);
+                    localVideo.setLocalUrl(downloadLocalHttpPath + "/" + user.getProfilePath().getName() + "/" + videoFile.getName());
                     if (videoFile.exists()) {
                         logger.info("本地已存在视频: {}", videoFile.toURI());
                         localVideo.setNew(false);
@@ -117,6 +122,31 @@ public class DownloadController {
             }
         } catch (Exception e) {
             logger.error("下载失败:{}", url, e);
+        }
+        return null;
+    }
+
+    @DeleteMapping(path = "/video/{uid}/{videoId}")
+    public String deleteVideo(@PathVariable(name = "uid") String uid,
+                              @PathVariable(name = "videoId") String videoId) {
+        try {
+            Optional<DyUser> dyUser = dyUserRepository.findById(uid);
+            if (dyUser.isPresent()) {
+                DyUser user = dyUser.get();
+                if (user.getProfilePath().exists()) {
+                    File videoFile = new File(user.getProfilePath(), videoId + ".mp4");
+                    if (videoFile.exists()) {
+                        if (videoFile.delete()) {
+                            return "ok";
+                        }
+                        logger.warn("删除失败:{}/{}", uid, videoId);
+                        return null;
+                    }
+                }
+            }
+            logger.warn("删除失败,未找到文件:{}/{}", uid, videoId);
+        } catch (Exception e) {
+            logger.error("删除失败:{}/{}", uid, videoId, e);
         }
         return null;
     }

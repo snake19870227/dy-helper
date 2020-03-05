@@ -17,6 +17,8 @@ public class DyLocalVideo {
 
     private File videoFile;
 
+    private String localUrl;
+
     @Override
     public String toString() {
         return "DyLocalVideo{" +
@@ -25,6 +27,7 @@ public class DyLocalVideo {
                 ", rootPath=" + rootPath +
                 ", profilePath=" + profilePath +
                 ", videoFile=" + videoFile +
+                ", localUrl='" + localUrl + '\'' +
                 '}';
     }
 
@@ -66,5 +69,13 @@ public class DyLocalVideo {
 
     public void setVideoFile(File videoFile) {
         this.videoFile = videoFile;
+    }
+
+    public String getLocalUrl() {
+        return localUrl;
+    }
+
+    public void setLocalUrl(String localUrl) {
+        this.localUrl = localUrl;
     }
 }

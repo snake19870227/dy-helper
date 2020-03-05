@@ -18,6 +18,7 @@ import com.github.douyin.client.DouYinApi;
 import com.github.douyin.client.DouYinWorker;
 import com.github.douyin.client.DyApi;
 import com.github.douyin.dao.DyUserRepository;
+import com.github.douyin.entity.DyLocalVideo;
 import com.github.douyin.entity.DyUser;
 import com.github.douyin.entity.DyVideo;
 import com.github.douyin.message.LogMessage;
@@ -54,8 +55,13 @@ public class ViewController {
 
     private static Map<String, WebRequest> lastPageRequest = new HashMap<>();
 
+    private WebClient webClient;
+
     @Value("${douyin.download.local-path}")
     private String downloadLocalPath;
+
+    @Value("${douyin.download.local-http-path}")
+    private String downloadLocalHttpPath;
 
     private final ObjectMapper objectMapper;
 
@@ -70,6 +76,7 @@ public class ViewController {
         this.objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         this.douYinWorker = douYinWorker;
         this.dyUserRepository = dyUserRepository;
+        this.webClient = new WebClient();
     }
 
     @GetMapping(path = "/view/user")
@@ -88,7 +95,6 @@ public class ViewController {
             shareUrl = DouYinApi.createShareUrlByUid(uid);
         }
 
-        final WebClient webClient = new WebClient();
         WebRequest h5UserVideoPageRequest = lastPageRequest.get(uid);
         if (h5UserVideoPageRequest == null) {
             List<WebRequest> ajaxPageRequests = new ArrayList<>();
@@ -118,7 +124,7 @@ public class ViewController {
                 if (awemeList != null) {
                     File rootPath = new File(downloadLocalPath);
                     Map<String, DyUser> userMap = new HashMap<>();
-                    Map<String, String> existsMap = new HashMap<>();
+                    Map<String, DyLocalVideo> existsMap = new HashMap<>();
                     for (JsonNode awemeNode : awemeList) {
                         JsonNode authorNode = awemeNode.get("author");
                         JsonNode videoNode = awemeNode.get("video");
@@ -137,10 +143,15 @@ public class ViewController {
 
                             String videoId = videoNode.get("vid").textValue();
                             DyVideo video = new DyVideo(videoId);
+                            video.setUid(user.getUid());
 
                             File videoFile = new File(profilePath, video.getVideoId() + ".mp4");
                             if (videoFile.exists()) {
-                                existsMap.put(videoId, videoFile.toString());
+                                DyLocalVideo localVideo = new DyLocalVideo();
+                                localVideo.setVideo(video);
+                                localVideo.setVideoFile(videoFile);
+                                localVideo.setLocalUrl(downloadLocalHttpPath + "/" + user.getProfilePath().getName() + "/" + videoFile.getName());
+                                existsMap.put(videoId, localVideo);
                             }
                         }
                     }

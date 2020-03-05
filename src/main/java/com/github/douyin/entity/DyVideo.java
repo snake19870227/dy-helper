@@ -7,6 +7,8 @@ import java.util.List;
  */
 public class DyVideo {
 
+    private String uid;
+
     private String awemeId;
 
     private String videoId;
@@ -39,12 +41,21 @@ public class DyVideo {
     @Override
     public String toString() {
         return "DyVideo{" +
-                "awemeId='" + awemeId + '\'' +
+                "uid='" + uid + '\'' +
+                ", awemeId='" + awemeId + '\'' +
                 ", videoId='" + videoId + '\'' +
                 ", shareUrl='" + shareUrl + '\'' +
                 ", downloadUrls=" + downloadUrls +
                 ", realFileUrl='" + realFileUrl + '\'' +
                 '}';
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
     public String getAwemeId() {

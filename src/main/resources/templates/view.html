@@ -11,21 +11,17 @@
     <div class="col-md-3">
         <div class="row">
             <div class="col-md-12">
-                <form>
-                    <div class="form-group">
-                        <label for="searchText">搜索User</label>
-                        <input type="text" class="form-control" id="searchText" value="">
-                    </div>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-primary btn-sm" id="search-btn" onclick="searchUsers('currentPage', true)">搜索</button>
-                    </div>
+                <form class="form-inline">
+                    <label for="searchText">搜索User：</label>
+                    <input type="text" class="form-control" id="searchText" value="">
+                    <button type="button" class="btn btn-primary btn-sm" id="search-btn" onclick="searchUsers('currentPage', true)">搜索</button>
                 </form>
             </div>
         </div>
         <div class="row">
             <div class="col-md-12">
                 <div class="row">
-                    <div class="col-md overflow-auto" style="max-height: 750px;">
+                    <div class="col-md overflow-auto" style="max-height: 830px;">
                         <table class="table" style="width: 100%;">
                             <tbody>
                             </tbody>
@@ -55,22 +51,20 @@
     <div class="col-md-9">
         <div class="row">
             <div class="col-md-12">
-                <form>
-                    <div class="form-group">
-                        <label for="uid">UID</label>
-                        <input type="text" class="form-control" id="uid" value="52597262388">
-                    </div>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-primary btn-sm" id="profile-btn" onclick="view(true)">查看</button>
-                        <button type="button" class="btn btn-danger btn-sm" id="clear-btn" onclick="clearVideo()">清空</button>
-                    </div>
+                <form class="form-inline">
+                    <label for="uid">UID：</label>
+                    <input type="text" class="form-control" id="uid" value="52597262388">
+                    <button type="button" class="btn btn-primary btn-sm" id="profile-btn" onclick="view(true)">查看</button>
+                    <button type="button" class="btn btn-warning btn-sm" id="clear-btn" onclick="clearVideo()">清空</button>
+                    <button type="button" class="btn btn-info btn-sm" id="download-all-btn" onclick="downloadPage()">下载当前所有</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="delete-all-btn" onclick="deletePage()">删除当前所有</button>
                 </form>
             </div>
         </div>
         <div class="row">
             <div class="col-md-12">
                 <div class="row">
-                    <div class="col-md overflow-auto" style="max-height: 750px;">
+                    <div class="col-md overflow-auto" style="max-height: 830px;">
                         <div id="video-list" class="row"></div>
                         <div class="row">
                             <div class="col-md">
@@ -119,6 +113,12 @@
     </div>
 </div>
 
+<div id="play-video" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content"></div>
+    </div>
+</div>
+
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
 <script src="https://cdn.bootcss.com/jquery-scrollTo/2.1.2/jquery.scrollTo.js"></script>
 <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.js"></script>
@@ -127,12 +127,16 @@
     var searching = $("#searching");
     var downloading = $("#downloading");
     var toasts = $("#toasts");
+    var playVideo = $("#play-video");
+    playVideo.on('hidden.bs.modal', function (e) {
+        playVideo.off("shown.bs.modal");
+        playVideo.find("video").remove();
+    });
 
     function view(clear) {
         if (clear) {
             clearVideo();
         }
-        searching.modal('show');
         searching.on('shown.bs.modal', function (e) {
             try {
                 var url = "/view/user?searchText=" + encodeURIComponent($("#uid").val());
@@ -157,11 +161,18 @@
                             "    <div class='card-body'>" +
                             "      <h5 class='card-title'>" + aweme.desc + "</h5>";
                         if (existsMap[aweme.video.vid]) {
+                            var localFile = existsMap[aweme.video.vid];
+                            // html = html +
+                            //     "<p class='card-text'>" + localFile.videoFile + "</p>";
                             html = html +
-                                "<p class='card-text'>" + existsMap[aweme.video.vid] + "</p>";
+                                "<button type='button' onclick='doPlayVideo(\"" + localFile.localUrl + "\")'" +
+                                " class='btn btn-info btn-sm'>播放</button>";
+                            html = html +
+                                "<button type='button' class='btn btn-danger btn-sm delete-video-btn'" +
+                                " onclick='deleteVideo(\"" + localFile.video.uid + "\", \"" + localFile.video.videoId + "\")'>删除</button>";
                         } else {
                             html = html +
-                                "<button id='" + aweme.video.vid + "' type='button' class='btn btn-primary btn-sm'" +
+                                "<button type='button' class='btn btn-primary btn-sm download-video-btn'" +
                                 " onclick='download(\"" + aweme.video.vid + "\")'>下载</button>";
                         }
                         html = html +
@@ -182,13 +193,15 @@
             } catch (e) {
                 console.error(e);
                 searching.modal('hide');
+            } finally {
+                searching.off();
             }
-            searching.off();
         });
+        searching.modal('show');
     }
 
     function download(videoId) {
-        var btn = $("#" + videoId);
+        var btn = $("#" + videoId + " .download-video-btn");
         btn.attr("disabled", "disabled");
         try {
             var aweme = awemeMap[videoId];
@@ -199,7 +212,16 @@
                     console.log(JSON.stringify(localVideo));
                     var videoCard = $("#" + localVideo.video.videoId);
                     videoCard.find("button").remove();
-                    videoCard.find(".card-title").after("<p class='card-text'>" + localVideo.videoFile + "</p>");
+                    var html = "";
+                    // html = html +
+                    //     "<p class='card-text'>" + localVideo.videoFile + "</p>";
+                    html = html +
+                        "<button type='button' onclick='doPlayVideo(\"" + localVideo.localUrl + "\")'" +
+                        " class='btn btn-info btn-sm'>播放</button>";
+                    html = html +
+                        "<button type='button' class='btn btn-danger btn-sm delete-video-btn'" +
+                        " onclick='deleteVideo(\"" + localVideo.video.uid + "\", \"" + localVideo.video.videoId + "\")'>删除</button>";
+                    videoCard.find(".card-title").after(html);
                     alertToast("下载完成", localVideo.videoFile);
                 },
                 "json"
@@ -215,7 +237,6 @@
         if (clear) {
             clearUsers();
         }
-        searching.modal('show');
         searching.on('shown.bs.modal', function (e) {
             $("tbody").html("");
             try {
@@ -256,14 +277,49 @@
             } catch (e) {
                 console.error(e);
                 searching.modal('hide');
+            } finally {
+                searching.off();
             }
-            searching.off();
         });
+        searching.modal('show');
     }
 
     function viewUser(uid) {
         $("#uid").val(uid);
         view(true);
+    }
+
+    function deleteVideo(uid, videoId) {
+        $.ajax({
+            url: "/video/" + uid + "/" + videoId,
+            type: "DELETE",
+            success: function (data, textStatus, jqXHR) {
+                if (data === "ok") {
+                    alertToast("删除成功", uid + "/" + videoId);
+                    var videoCard = $("#" + videoId);
+                    var html = "<button type='button' class='btn btn-primary btn-sm download-video-btn'" +
+                               " onclick='download(\"" + videoId + "\")'>下载</button>";
+                    videoCard.find(".card-title").after(html);
+                    videoCard.find(".download-video-btn ~ *").remove();
+                } else {
+                    alertToast("删除失败", uid + "/" + videoId);
+                }
+            }
+        });
+    }
+
+    function downloadPage() {
+        $(".download-video-btn").each(function (index) {
+            var _this = $(this);
+            _this.trigger("click");
+        });
+    }
+
+    function deletePage() {
+        $(".delete-video-btn").each(function (index) {
+            var _this = $(this);
+            _this.trigger("click");
+        });
     }
 
     function alertToast(headerText, bodyHtml) {
@@ -281,9 +337,21 @@
         var h = $(html);
         toasts.append(h);
         h.on('hidden.bs.toast', function () {
-            h.detach();
+            h.remove();
         });
         h.toast('show');
+    }
+
+    function doPlayVideo(url) {
+        var html = "" +
+            "<video controls autoplay loop name='media' style='max-height: 800px;'>" +
+            "<source src='" + url + "' type='video/mp4'>" +
+            "</video>" +
+            "";
+        playVideo.on('shown.bs.modal', function (e) {
+            playVideo.find(".modal-content").append(html);
+        });
+        playVideo.modal('show');
     }
 
     function clearVideo() {
