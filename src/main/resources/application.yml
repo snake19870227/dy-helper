@@ -1,5 +1,7 @@
 server:
   port: 8889
+  servlet:
+    context-path: /dyhelper
 spring:
   application:
     name: douyin-helper

@@ -139,7 +139,7 @@
         }
         searching.on('shown.bs.modal', function (e) {
             try {
-                var url = "/view/user?searchText=" + encodeURIComponent($("#uid").val());
+                var url = "/dyhelper/view/user?searchText=" + encodeURIComponent($("#uid").val());
                 var cursor = $("#cursor").val();
                 if (cursor) {
                     url += ("&cursor=" + cursor);
@@ -206,7 +206,7 @@
         try {
             var aweme = awemeMap[videoId];
             $.get(
-                "/download/video",
+                "/dyhelper/download/video",
                 aweme,
                 function (localVideo) {
                     console.log(JSON.stringify(localVideo));
@@ -241,7 +241,7 @@
             $("tbody").html("");
             try {
                 $.get(
-                    "/users?searchStr=" + encodeURIComponent($("#searchText").val()) + "&page=" + $("#" + pageNumId).val(),
+                    "/dyhelper/users?searchStr=" + encodeURIComponent($("#searchText").val()) + "&page=" + $("#" + pageNumId).val(),
                     function (result) {
                         $("#currentPage").val(result.currentPage);
                         if (result.hasPre) {
@@ -291,7 +291,7 @@
 
     function deleteVideo(uid, videoId) {
         $.ajax({
-            url: "/video/" + uid + "/" + videoId,
+            url: "/dyhelper/video/" + uid + "/" + videoId,
             type: "DELETE",
             success: function (data, textStatus, jqXHR) {
                 if (data === "ok") {
