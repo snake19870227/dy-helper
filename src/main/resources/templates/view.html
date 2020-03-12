@@ -21,7 +21,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="row">
-                    <div class="col-md overflow-auto" style="max-height: 830px;">
+                    <div class="col-md overflow-auto" style="height: 830px;">
                         <table class="table" style="width: 100%;">
                             <tbody>
                             </tbody>
@@ -53,18 +53,21 @@
             <div class="col-md-12">
                 <form class="form-inline">
                     <label for="uid">UID：</label>
-                    <input type="text" class="form-control" id="uid" value="52597262388" style="width:700px;">
-                    <button type="button" class="btn btn-primary btn-sm" id="profile-btn" onclick="view(true)">查看</button>
-                    <button type="button" class="btn btn-warning btn-sm" id="clear-btn" onclick="clearVideo()">清空</button>
-                    <button type="button" class="btn btn-info btn-sm" id="download-all-btn" onclick="downloadPage()">下载当前所有</button>
-                    <button type="button" class="btn btn-danger btn-sm" id="delete-all-btn" onclick="deletePage()">删除当前所有</button>
+                    <input type="text" class="form-control" id="uid" value="52597262388" style="width:600px;">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary btn-sm" id="profile-btn" onclick="view(true, false)">查看</button>
+                        <button type="button" class="btn btn-success btn-sm" id="profile-all-btn" onclick="view(true, true)">查看所有</button>
+                        <button type="button" class="btn btn-warning btn-sm" id="clear-btn" onclick="clearVideo()">清空</button>
+                        <button type="button" class="btn btn-info btn-sm" id="download-all-btn" onclick="downloadPage()">下载当前所有</button>
+                        <button type="button" class="btn btn-danger btn-sm" id="delete-all-btn" onclick="deletePage()">删除当前所有</button>
+                    </div>
                 </form>
             </div>
         </div>
         <div class="row">
             <div class="col-md-12">
                 <div class="row">
-                    <div class="col-md overflow-auto" style="max-height: 830px;">
+                    <div class="col-md overflow-auto" style="height: 830px;">
                         <div id="video-list" class="row"></div>
                         <div class="row">
                             <div class="col-md">
@@ -73,6 +76,18 @@
                                         onclick="view(false)">更多
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-dark">
+                                共 <span id="total-num" class="badge badge-light"></span> 个
+                            </button>
+                            <button type="button" class="btn btn-dark">
+                                已下载 <span id="download-num" class="badge badge-light"></span> 个
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -133,63 +148,13 @@
         playVideo.find("video").remove();
     });
 
-    function view(clear) {
+    function view(clear, isAll) {
         if (clear) {
             clearVideo();
         }
         searching.on('shown.bs.modal', function (e) {
             try {
-                var url = "/dyhelper/view/user?searchText=" + encodeURIComponent($("#uid").val());
-                var cursor = $("#cursor").val();
-                if (cursor) {
-                    url += ("&cursor=" + cursor);
-                }
-                $.get(url, function (result) {
-                    var videosInfo = JSON.parse(result.videosInfo);
-                    $("#cursor").val(videosInfo.max_cursor);
-                    var existsMap = result.exists;
-                    $.each(videosInfo.aweme_list, function (index, aweme) {
-                        awemeMap[aweme.video.vid] = {
-                            url: aweme.video.download_addr.url_list[0],
-                            videoId: aweme.video.vid,
-                            uid: aweme.author.uid
-                        };
-                        var html = "" +
-                            "<div class='col-md-3'>" +
-                            "  <div id='" + aweme.video.vid + "' class='card bg-light border-dark'>" +
-                            "    <img src='" + aweme.video.dynamic_cover.url_list[0] + "' class='card-img-top'>" +
-                            "    <div class='card-body'>" +
-                            "      <h5 class='card-title'>" + aweme.desc + "</h5>";
-                        if (existsMap[aweme.video.vid]) {
-                            var localFile = existsMap[aweme.video.vid];
-                            // html = html +
-                            //     "<p class='card-text'>" + localFile.videoFile + "</p>";
-                            html = html +
-                                "<button type='button' onclick='doPlayVideo(\"" + localFile.localUrl + "\")'" +
-                                " class='btn btn-info btn-sm'>播放</button>";
-                            html = html +
-                                "<button type='button' class='btn btn-danger btn-sm delete-video-btn'" +
-                                " onclick='deleteVideo(\"" + localFile.video.uid + "\", \"" + localFile.video.videoId + "\")'>删除</button>";
-                        } else {
-                            html = html +
-                                "<button type='button' class='btn btn-primary btn-sm download-video-btn'" +
-                                " onclick='download(\"" + aweme.video.vid + "\")'>下载</button>";
-                        }
-                        html = html +
-                            "    </div>" +
-                            "  </div>" +
-                            "</div>";
-                        $("#video-list").append(html);
-                    });
-                    if (videosInfo.has_more === true) {
-                        // $("#nextPageVideo").removeAttr("disabled");
-                        $("#nextPageVideo").show();
-                    } else {
-                        // $("#nextPageVideo").attr("disabled", "disabled");
-                        $("#nextPageVideo").hide();
-                    }
-                    searching.modal('hide');
-                }, "json");
+                loadVideos(isAll);
             } catch (e) {
                 console.error(e);
                 searching.modal('hide');
@@ -198,6 +163,67 @@
             }
         });
         searching.modal('show');
+    }
+
+    function loadVideos(isAll) {
+        var url = "/dyhelper/view/user?searchText=" + encodeURIComponent($("#uid").val());
+        var cursor = $("#cursor").val();
+        if (cursor) {
+            url += ("&cursor=" + cursor);
+        }
+        $.get(url, function (result) {
+            var videosInfo = JSON.parse(result.videosInfo);
+            $("#cursor").val(videosInfo.max_cursor);
+            var existsMap = result.exists;
+            $.each(videosInfo.aweme_list, function (index, aweme) {
+                awemeMap[aweme.video.vid] = {
+                    url: aweme.video.download_addr.url_list[0],
+                    videoId: aweme.video.vid,
+                    uid: aweme.author.uid
+                };
+                var html = "" +
+                    "<div class='col-md-3'>" +
+                    "  <div id='" + aweme.video.vid + "' class='card bg-light border-dark '>" +
+                    "    <img src='" + aweme.video.dynamic_cover.url_list[0] + "' class='card-img-top'>" +
+                    "    <div class='card-body'>" +
+                    "      <h5 class='card-title'>" + aweme.desc + "</h5>";
+                if (existsMap[aweme.video.vid]) {
+                    var localFile = existsMap[aweme.video.vid];
+                    // html = html +
+                    //     "<p class='card-text'>" + localFile.videoFile + "</p>";
+                    html = html +
+                        "<button type='button' onclick='doPlayVideo(\"" + localFile.localUrl + "\")'" +
+                        " class='btn btn-info btn-sm'>播放</button>";
+                    html = html +
+                        "<button type='button' class='btn btn-danger btn-sm delete-video-btn'" +
+                        " onclick='deleteVideo(\"" + localFile.video.uid + "\", \"" + localFile.video.videoId + "\")'>删除</button>";
+                } else {
+                    html = html +
+                        "<button type='button' class='btn btn-primary btn-sm download-video-btn'" +
+                        " onclick='download(\"" + aweme.video.vid + "\")'>下载</button>";
+                }
+                html = html +
+                    "    </div>" +
+                    "  </div>" +
+                    "</div>";
+                $("#video-list").append(html);
+            });
+            if (videosInfo.has_more === true) {
+                // $("#nextPageVideo").removeAttr("disabled");
+                $("#nextPageVideo").show();
+                if (isAll) {
+                    loadVideos(isAll);
+                }
+            } else {
+                // $("#nextPageVideo").attr("disabled", "disabled");
+                $("#nextPageVideo").hide();
+            }
+            if ((isAll && videosInfo.has_more === false) || isAll === false) {
+                searching.modal('hide');
+            }
+            $("#total-num").html($(".card").length);
+            $("#download-num").html($(".delete-video-btn").length);
+        }, "json");
     }
 
     function download(videoId) {
@@ -223,6 +249,7 @@
                         " onclick='deleteVideo(\"" + localVideo.video.uid + "\", \"" + localVideo.video.videoId + "\")'>删除</button>";
                     videoCard.find(".card-title").after(html);
                     alertToast("下载完成", localVideo.videoFile);
+                    $("#download-num").html($(".delete-video-btn").length);
                 },
                 "json"
             );
@@ -260,13 +287,17 @@
                             $.each(result.userList, function (index, user) {
                                 var html = "" +
                                     "<tr>" +
-                                    "    <td><img src='" + user.headImageUrl + "' style='width:100px;height:100px;'></td>" +
+                                    "    <td rowspan='2' style='width:124px;'><img src='" + user.headImageUrl + "' style='width:100px;height:100px;'></td>" +
                                     "    <td>" + user.nickname + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
                                     "    <td>" +
-                                    "        <button type='button' class='btn btn-primary btn-sm' onclick='viewUser(\"" + user.uid + "\")'>视频</button>" +
+                                    "        <button type='button' class='btn btn-primary btn-sm' onclick='viewUser(\"" + user.uid + "\", false)'>视频</button>" +
+                                    "        <button type='button' class='btn btn-primary btn-sm' onclick='viewUser(\"" + user.uid + "\", true)'>所有视频</button>" +
                                     "        <a href='https://www.iesdouyin.com/share/user/" + user.uid + "' class='btn btn-primary btn-sm' target='_blank'>查看</a>" +
                                     "    </td>" +
-                                    "</tr>";
+                                    "</tr>" +
+                                    "";
                                 $("tbody").append(html);
                             });
                         }
@@ -284,9 +315,9 @@
         searching.modal('show');
     }
 
-    function viewUser(uid) {
+    function viewUser(uid, isAll) {
         $("#uid").val(uid);
-        view(true);
+        view(true, isAll);
     }
 
     function deleteVideo(uid, videoId) {
@@ -301,6 +332,7 @@
                                " onclick='download(\"" + videoId + "\")'>下载</button>";
                     videoCard.find(".card-title").after(html);
                     videoCard.find(".download-video-btn ~ *").remove();
+                    $("#download-num").html($(".delete-video-btn").length);
                 } else {
                     alertToast("删除失败", uid + "/" + videoId);
                 }
@@ -359,6 +391,8 @@
         $('#cursor').val(0);
         // $("#nextPageVideo").attr("disabled", "disabled");
         $("#nextPageVideo").hide();
+        $("#total-num").html('');
+        $("#download-num").html('');
         awemeMap = {};
     }
 
