@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.gargoylesoftware.htmlunit.UnexpectedPage;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.html.DomNode;
+import com.gargoylesoftware.htmlunit.html.HtmlDivision;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.github.douyin.client.CacheAjaxController;
 import com.github.douyin.client.DouYinApi;
 import com.github.douyin.client.DouYinWorker;
@@ -100,14 +103,21 @@ public class ViewController {
             List<WebRequest> ajaxPageRequests = new ArrayList<>();
             webClient.setAjaxController(new CacheAjaxController(ajaxPageRequests));
             try {
-                webClient.getPage(shareUrl);
+                HtmlPage page = webClient.getPage(shareUrl);
+                DomNode node = page.querySelector("#pagelet-user-info > div.video-tab > div > div.music-tab.tab.get-list.active");
+                if (node != null) {
+                    HtmlDivision division = page.querySelector("#pagelet-user-info > div.video-tab > div > div.user-tab.tab.get-list");
+                    if (division != null) {
+                        division.click();
+                    }
+                }
             } catch (IOException e) {
                 logger.error("模拟浏览器访问分析链接失败", e);
             }
             if (ajaxPageRequests.isEmpty()) {
                 logger.warn("未得到获取用户视频列表ajax请求地址");
             }
-            h5UserVideoPageRequest = ajaxPageRequests.get(0);
+            h5UserVideoPageRequest = ajaxPageRequests.get(ajaxPageRequests.size() - 1);
             lastPageRequest.clear();
             lastPageRequest.put(uid, h5UserVideoPageRequest);
         }
