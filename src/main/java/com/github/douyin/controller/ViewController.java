@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +42,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -183,7 +185,7 @@ public class ViewController {
     public Map<String, Object> users(@RequestParam(name = "searchStr") String searchStr,
                                      @RequestParam(name = "page", defaultValue = "0") int page) {
         Page<DyUser> pageInfo;
-        PageRequest pageRequest = PageRequest.of(page, 20);
+        PageRequest pageRequest = PageRequest.of(page, 20, Sort.by("uid.keyword"));
         if (StrUtil.isNotBlank(searchStr)) {
             MultiMatchQueryBuilder queryBuilder = new MultiMatchQueryBuilder(searchStr, "nickname", "signature");
             NativeSearchQuery query = new NativeSearchQuery(queryBuilder);
