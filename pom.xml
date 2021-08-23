@@ -19,7 +19,7 @@
 
         <spring-boot.version>2.2.2.RELEASE</spring-boot.version>
         <hutool.version>5.1.0</hutool.version>
-        <jsonp.version>1.11.3</jsonp.version>
+        <jsonp.version>1.14.2</jsonp.version>
         <emoji-java.version>5.1.1</emoji-java.version>
         <htmlunit.version>2.37.0</htmlunit.version>
         <commons-logging.version>1.2</commons-logging.version>
